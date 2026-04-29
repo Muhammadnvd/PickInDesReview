@@ -1,12 +1,11 @@
 # PickInDes Prototype
 
-This workspace contains a static prototype based on your attached `pickindes-v3.html` draft.
+This workspace contains the current PicInDes web app source.
 
 ## Files
 - `index.html` — main website entry
 - `style.css` — extracted styles
 - `script.js` — extracted functionality and interactions
-- `pickindes-v3.html` — original draft copy
 
 ## How to run
 1. Open `index.html` in your browser.
