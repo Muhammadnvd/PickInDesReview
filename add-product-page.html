@@ -1,0 +1,75 @@
+<!-- ══════════════ ADD PRODUCT PAGE ══════════════ -->
+<div id="add-product" class="page">
+  <div style="padding:28px;max-width:680px;margin:0 auto">
+    <button class="back-btn" style="padding:0" onclick="go('katalogas')">← Grįžti į katalogą</button>
+    <div style="margin-top:24px">
+      <div class="dash-title" style="margin-bottom:20px">Pridėti naują produktą</div>
+      
+      <form id="product-form" style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Produkto pavadinimas *</label>
+          <input class="form-input" type="text" id="prod-name" placeholder="Loom Lounge Chair" required>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Gamintojas</label>
+            <input class="form-input" type="text" id="prod-brand" placeholder="Muuto">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategorija</label>
+            <input class="form-input" type="text" id="prod-category" placeholder="Kėdės">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Kaina (€)</label>
+            <input class="form-input" type="number" id="prod-price" placeholder="1290" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">SKU</label>
+            <input class="form-input" type="text" id="prod-sku" placeholder="MUU-LLC-OAK-01">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:-6px">
+          <label class="toggle-label" for="prod-price-from" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mid)">
+            <input type="checkbox" id="prod-price-from" style="cursor:pointer;width:16px;height:16px">
+            Rodyti "nuo €"
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sandėlyje (vnt.)</label>
+          <input class="form-input" type="number" id="prod-stock" placeholder="3" min="0">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Aprašymas</label>
+          <textarea class="form-input" id="prod-desc" placeholder="Trumpas produkto aprašymas..." style="min-height:80px;resize:vertical"></textarea>
+        </div>
+
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:16px">
+          <div style="font-size:13px;font-weight:500;color:var(--mid);margin-bottom:12px">2D Modeliai (3 formatai)</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">JPG</div>
+              <input class="form-input" type="file" id="img-jpg" accept=".jpg,.jpeg" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">PNG</div>
+              <input class="form-input" type="file" id="img-png" accept=".png" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">SVG</div>
+              <input class="form-input" type="file" id="img-svg" accept=".svg" style="flex:1">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-full btn-dark" style="margin-top:8px">+ Pridėti produktą</button>
+      </form>
+    </div>
+  </div>
+</div>

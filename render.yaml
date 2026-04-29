@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: pickindes
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: DATA_DIR
+        value: /data
+      - key: CORS_ORIGIN
+        sync: false
+    disk:
+      name: pickindes-data
+      mountPath: /data
+      sizeGB: 5

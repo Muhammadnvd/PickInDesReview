@@ -1,0 +1,686 @@
+﻿<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PickInDes — Prototipas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<nav id="nav">
+  <div class="n-logo" onclick="goToCatalog()">PickInDes</div>
+  <ul class="n-links">
+    <li><a id="nl-kat" class="active" onclick="goToCatalog()" data-i18n="nav_catalog">Katalogas</a></li>
+    <li><a id="nl-dash" onclick="go('dashboard')" data-i18n="nav_account">Mano paskyra</a></li>
+    <li><a id="nl-sar" onclick="go('sarasas')" data-i18n="nav_list">Sąrašas klientui</a></li>
+  </ul>
+  <div class="n-right" id="nav-right">
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('lt')">LT</button>
+      <span style="color:var(--light);font-size:11px">|</span>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+    <span class="n-login" onclick="go('login')" data-i18n="nav_login">Prisijungti</span>
+    <span id="nav-heart" onclick="heartNavClick()" style="width:18px;height:18px;border-radius:50%;background:#fff;border:1.5px solid #1d1d1f;display:none;cursor:pointer;transition:all .15s;flex-shrink:0;vertical-align:middle" title="Mano mėgstami"></span>
+    <button class="n-btn" onclick="go('register')" data-i18n="nav_register">Registruotis</button>
+  </div>
+</nav>
+
+<!-- ══════════════ KATALOGAS ══════════════ -->
+<div id="katalogas" class="page active">
+  <div class="catalog-layout">
+
+    <div class="sidebar">
+      <div class="search-wrap">
+        <span class="search-ico">⌕</span>
+        <input class="search-input" id="si" placeholder="Ieškoti produktų..." autocomplete="off" oninput="doSearch(this.value)">
+        <div class="ac-list" id="acl"></div>
+      </div>
+
+      <div class="filter-section" id="category-filter-section">
+        <div class="filter-title">Kategorija</div>
+        <div class="fi on" onclick="setKat(this)">Visi produktai <span class="fc">0</span></div>
+        <div class="fi" id="fi-megstami" onclick="setMegstami(this)" style="color:var(--dark);gap:8px;display:none"><span id="fi-megstami-dot" style="width:14px;height:14px;border-radius:50%;background:#fff;border:1.5px solid #1d1d1f;display:inline-block;flex-shrink:0"></span>Mano mėgstami <span class="fc" id="fc-megstami">0</span></div>
+      </div>
+
+      <div class="filter-section" id="brand-filter-section">
+        <div class="filter-title">Gamintojas</div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Kaina (€)</div>
+        <div class="price-slider-wrap">
+          <div class="price-track-wrap" id="price-track-wrap">
+            <div class="price-track"></div>
+            <div class="price-range-fill" id="price-fill"></div>
+            <div class="price-thumb" id="thumb-min" onmousedown="startDrag(event,'min')"></div>
+            <div class="price-thumb" id="thumb-max" onmousedown="startDrag(event,'max')"></div>
+          </div>
+          <div class="price-labels">
+            <span>€ <span id="price-label-min" class="price-label-min">0</span></span>
+            <span>€ <span id="price-label-max" class="price-label-max">5000</span></span>
+          </div>
+        </div>
+        <div class="price-row">
+          <input class="price-input" id="price-in-min" type="number" placeholder="Nuo" min="0" max="5000" value="0" oninput="syncFromInput('min')">
+          <input class="price-input" id="price-in-max" type="number" placeholder="Iki" min="0" max="5000" value="5000" oninput="syncFromInput('max')">
+        </div>
+      </div>
+
+      <div class="filter-section" id="model-format-filter-section">
+        <div class="filter-title">3D formatas</div>
+        <div class="fi" data-model-format="SKP" onclick="togCheck(this)"><span class="fcheck"></span>.SKP</div>
+        <div class="fi" data-model-format="OBJ" onclick="togCheck(this)"><span class="fcheck"></span>.OBJ</div>
+        <div class="fi" data-model-format="MTL" onclick="togCheck(this)"><span class="fcheck"></span>.MTL</div>
+        <div class="fi" data-model-format="STEP" onclick="togCheck(this)"><span class="fcheck"></span>.STEP</div>
+        <div class="fi" data-model-format="3DS" onclick="togCheck(this)"><span class="fcheck"></span>.3DS</div>
+        <div class="fi" data-model-format="DWG" onclick="togCheck(this)"><span class="fcheck"></span>.DWG</div>
+      </div>
+
+      <button class="clear-all" onclick="clearFilters()">Išvalyti filtrus</button>
+    </div>
+
+    <div class="catalog-main">
+      <div class="catalog-topbar">
+        <div class="cat-count" id="cat-count"></div>
+        <select class="sort-sel">
+          <option>Populiariausi</option>
+          <option>Kaina: mažiausia</option>
+          <option>Kaina: didžiausia</option>
+          <option>Naujausi</option>
+        </select>
+      </div>
+      <div class="active-tags" id="active-tags"></div>
+      <div class="prod-grid">
+        <!-- Products are rendered dynamically from API -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ PRODUKTAS ══════════════ -->
+<div id="produktas" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 28px 0">
+    <button class="back-btn" style="padding:0" onclick="go('katalogas')">← Grįžti į katalogą</button>
+  </div>
+  <div class="prod-detail">
+    <div>
+      <div style="position:relative;display:inline-block;width:100%">
+        <div class="prod-gallery-main"><span style="font-size:72px">◻</span><span class="skp-b" style="position:absolute;top:14px;right:14px;opacity:1">.SKP</span></div>
+        <button id="prod-heart" onclick="toggleHeart(event,0)" class="heart-btn" style="position:absolute;bottom:14px;right:10px"></button>
+      </div>
+      <div class="prod-thumbs">
+        <div class="prod-thumb active"></div>
+        <div class="prod-thumb"></div>
+        <div class="prod-thumb"></div>
+      </div>
+      <div id="obj-preview-wrap" class="obj-preview-wrap" style="display:none">
+        <div class="obj-preview-head">3D peržiūra</div>
+        <div id="obj-preview-canvas" class="obj-preview-canvas"></div>
+      </div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-cat-tag">Muuto · Kėdės</div>
+      <div class="prod-h1">Loom Lounge Chair</div>
+      <div class="prod-brand-tag">Dizaineris: TAF Architects · Danija, 2020</div>
+      <div class="prod-price">€ 1 290</div>
+      <div class="spec-title" id="spec-title">Specifikacijos</div>
+      <div id="product-specs"></div>
+      <div class="skp-dl-box">
+        <div class="skp-icon-box">.SKP</div>
+        <div class="skp-dl-info">
+          <div class="skp-dl-name">Loom_Lounge_Chair.skp</div>
+          <div class="skp-dl-sub">SketchUp 2021+ · 4.2 MB</div>
+        </div>
+        <button class="skp-dl-btn" onclick="alert('Prisijunkite norėdami parsisiųsti 3D modelį')">↓ Parsisiųsti</button>
+      </div>
+      <button class="btn-full btn-dark" onclick="openProjPopup()">+ Pridėti į projektą</button>
+      <button class="btn-full btn-out" style="margin-top:8px">Į parduotuvę →</button>
+      <button onclick="openFlag()" style="width:100%;margin-top:10px;padding:10px;border:none;background:none;font-size:12px;color:var(--light);cursor:pointer;font-family:'Inter',sans-serif;transition:color .15s" onmouseover="this.style.color='var(--mid)'" onmouseout="this.style.color='var(--light)'">⚑ Pranešti apie netinkamą modelį</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FLAG POPUP ══════════════ -->
+<div id="flag-overlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.35);backdrop-filter:blur(3px);align-items:center;justify-content:center" onclick="if(event.target===this)closeFlag()">
+  <div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:340px;margin:0 20px;box-shadow:0 20px 56px rgba(0,0,0,0.15);animation:fadeIn .18s ease">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:15px;font-weight:500;margin-bottom:3px">Pranešti apie netinkamą modelį</div>
+        <div style="font-size:12px;color:var(--light)">Loom Lounge Chair</div>
+      </div>
+      <button onclick="closeFlag()" style="width:26px;height:26px;border-radius:50%;border:0.5px solid var(--border2);background:none;cursor:pointer;font-size:13px;color:var(--mid);display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    </div>
+    <div id="flag-opts">
+      <div class="flag-opt" onclick="selFlag(this)"><div class="flag-rad"></div><div style="font-size:13px">Modelis neatitinka realaus produkto</div></div>
+      <div class="flag-opt" onclick="selFlag(this)"><div class="flag-rad"></div><div style="font-size:13px">Neteisingos proporcijos / matmenys</div></div>
+      <div class="flag-opt" onclick="selFlag(this)"><div class="flag-rad"></div><div style="font-size:13px">Blogos kokybės geometrija</div></div>
+      <div class="flag-opt" onclick="selFlag(this)"><div class="flag-rad"></div><div style="font-size:13px">Failas neatsidaro / sugadintas</div></div>
+      <div class="flag-opt" id="flag-other" onclick="selFlag(this)"><div class="flag-rad"></div><div style="font-size:13px">Kita</div></div>
+    </div>
+    <textarea id="flag-ta" rows="2" placeholder="Trumpai aprašykite problemą..." style="display:none;width:100%;margin-top:8px;padding:8px 10px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:var(--dark);resize:none;outline:none;background:var(--bg2)"></textarea>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="closeFlag()" style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--border2);background:none;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;color:var(--mid)">Atšaukti</button>
+      <button id="flag-submit" onclick="submitFlag()" style="flex:2;padding:10px;border-radius:8px;border:none;background:#e63950;color:#fff;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;opacity:.35;pointer-events:none;transition:all .15s">Siųsti pranešimą</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PROJEKTO POPUP ══════════════ -->
+<div id="proj-overlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div id="proj-popup" style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;margin:0 24px;box-shadow:0 24px 64px rgba(0,0,0,0.15);animation:fadeIn .2s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:16px;font-weight:500;margin-bottom:2px">Pridėti į projektą</div>
+        <div style="font-size:12px;color:var(--light)" id="popup-prod-name"></div>
+      </div>
+      <button onclick="closeProjPopup()" style="width:28px;height:28px;border-radius:50%;border:0.5px solid var(--border2);background:none;cursor:pointer;font-size:14px;color:var(--mid);display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <div style="font-size:11px;font-weight:500;color:var(--light);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Mano projektai</div>
+
+    <div id="proj-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
+      <div class="proj-pick-item" onclick="selectProj(this,'Vilniaus apartamentai')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:7px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🏠</div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Vilniaus apartamentai</div>
+            <div style="font-size:11px;color:var(--light)">11 produktų · Aktyvus</div>
+          </div>
+        </div>
+        <div class="proj-pick-check">✓</div>
+      </div>
+      <div class="proj-pick-item" onclick="selectProj(this,'Kauno biuras')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:7px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🏢</div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Kauno biuras</div>
+            <div style="font-size:11px;color:var(--light)">8 produktų · Juodraštis</div>
+          </div>
+        </div>
+        <div class="proj-pick-check">✓</div>
+      </div>
+      <div class="proj-pick-item" onclick="selectProj(this,'Palangos namas')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:7px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🌿</div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Palangos namas</div>
+            <div style="font-size:11px;color:var(--light)">5 produktų · Išsiųstas</div>
+          </div>
+        </div>
+        <div class="proj-pick-check">✓</div>
+      </div>
+    </div>
+
+    <div style="border-top:0.5px solid var(--border);padding-top:12px;margin-bottom:16px">
+      <div id="new-proj-row" onclick="showNewProjInput()" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='none'">
+        <div style="width:32px;height:32px;border-radius:7px;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--light);flex-shrink:0">+</div>
+        <div style="font-size:13px;color:var(--mid)">Naujas projektas...</div>
+      </div>
+      <div id="new-proj-input-row" style="display:none;align-items:center;gap:8px;padding:4px 0">
+        <input id="new-proj-input" type="text" placeholder="Projekto pavadinimas..." style="flex:1;padding:8px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark)" onkeydown="if(event.key==='Enter')createNewProj();if(event.key==='Escape')hideNewProjInput()">
+        <button onclick="createNewProj()" style="padding:8px 14px;border-radius:8px;border:none;background:var(--dark);color:#fff;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap">Sukurti</button>
+        <button onclick="hideNewProjInput()" style="padding:8px 10px;border-radius:8px;border:0.5px solid var(--border2);background:none;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;color:var(--mid)">✕</button>
+      </div>
+    </div>
+
+    <button id="proj-confirm-btn" onclick="confirmProj()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--dark);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;opacity:.4;pointer-events:none;transition:all .15s">Pridėti</button>
+  </div>
+</div>
+
+<!-- ══════════════ PROJEKTO DETALIŲ POPUP ══════════════ -->
+<div id="proj-details-overlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);align-items:center;justify-content:center" onclick="if(event.target===this)closeProjDetailsPopup()">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:100%;max-width:420px;margin:0 24px;box-shadow:0 24px 64px rgba(0,0,0,0.15);animation:fadeIn .2s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+      <div style="font-size:16px;font-weight:500">Projekto informacija</div>
+      <button onclick="closeProjDetailsPopup()" style="width:28px;height:28px;border-radius:50%;border:0.5px solid var(--border2);background:none;cursor:pointer;font-size:14px;color:var(--mid);display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Projekto pavadinimas</label>
+        <input id="pd-name" type="text" placeholder="pvz. Vilniaus apartamentai" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Projekto ikona</label>
+        <select id="pd-icon" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+          <option value="🏠">🏠 Namas</option>
+          <option value="🏡">🏡 Rezidencija</option>
+          <option value="🏢">🏢 Biuras</option>
+          <option value="🏣">🏣 Įstaiga</option>
+          <option value="🏬">🏬 Kompleksas</option>
+          <option value="🏭">🏭 Industrinis pastatas</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Kliento vardas</label>
+        <input id="pd-client" type="text" placeholder="pvz. Jonas Jonaitis" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Adresas / Vieta</label>
+        <input id="pd-location" type="text" placeholder="pvz. Vilniaus g. 5, Žvėrynas" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Plotas (m²)</label>
+          <input id="pd-area" type="number" placeholder="pvz. 124" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Tipas</label>
+          <select id="pd-type" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+            <option value="">— pasirinkite —</option>
+            <option value="Gyvenamasis butas">Gyvenamasis butas</option>
+            <option value="Privatus namas">Privatus namas</option>
+            <option value="Biuras">Biuras</option>
+            <option value="Komercinės patalpos">Komercinės patalpos</option>
+            <option value="Viešbutis">Viešbutis</option>
+            <option value="Restoranai / kavinė">Restoranai / kavinė</option>
+            <option value="Kita">Kita</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Interjero stilius</label>
+        <input id="pd-style" type="text" placeholder="pvz. Minimalistinis, Skandinaviškas" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--light);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px">Pastabos</label>
+        <textarea id="pd-notes" placeholder="Papildoma informacija apie projektą..." rows="3" style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark);box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+    </div>
+    <button onclick="saveProjDetails()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--dark);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;margin-top:20px;transition:opacity .15s">Išsaugoti</button>
+  </div>
+</div>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="dashboard" class="page">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">Sveika, Aušra</div>
+        <div class="dash-sub">Interjero dizainerė · AK Interjerai</div>
+        <div class="dash-code">Jūsų affiliate kodas: <span>AUSRA2026</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="dash-clear-data-btn" onclick="clearCurrentUserData()" style="padding:8px 12px;border-radius:20px;border:0.5px solid var(--border2);background:none;color:var(--mid);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif" data-i18n="dash_clear_data">Išvalyti mano demo duomenis</button>
+        <div class="n-user">
+          <div class="n-avatar">AK</div>
+          <span style="font-size:13px;color:var(--mid)">Paskyros nustatymai</span>
+        </div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-n" id="stat-active-projects">0</div><div class="stat-l">Aktyvūs projektai</div></div>
+      <div class="stat-box"><div class="stat-n" id="stat-downloaded-models">0</div><div class="stat-l">Parsisiųsti modeliai</div></div>
+      <div class="stat-box"><div class="stat-n stat-green">€ 1 260</div><div class="stat-l">Komisiniai šį mėn.</div></div>
+      <div class="stat-box"><div class="stat-n">12</div><div class="stat-l">Kliento pirkimai</div></div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-card-title">Projektai</div>
+        <div id="dash-proj-list">
+        </div>
+        <div id="new-dash-proj-row" style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">
+          <div onclick="showDashNewProj()" style="display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;color:var(--mid);font-size:13px;transition:color .1s" onmouseover="this.style.color='var(--dark)'" onmouseout="this.style.color='var(--mid)'">
+            <div style="width:32px;height:32px;border-radius:8px;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--light);flex-shrink:0">+</div>
+            Naujas projektas
+          </div>
+          <div id="dash-new-proj-input" style="display:none;align-items:center;gap:8px;margin-top:6px">
+            <input id="dash-proj-name" type="text" placeholder="Projekto pavadinimas..." style="flex:1;padding:7px 10px;border:0.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--dark)" onkeydown="if(event.key==='Enter')createDashProj();if(event.key==='Escape')hideDashNewProj()">
+            <button onclick="createDashProj()" style="padding:7px 14px;border-radius:8px;border:none;background:var(--dark);color:#fff;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">Sukurti</button>
+            <button onclick="hideDashNewProj()" style="padding:7px 10px;border-radius:8px;border:0.5px solid var(--border2);background:none;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;color:var(--mid)">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">Parsisiųsti modeliai <span class="dash-card-link" onclick="go('katalogas')">Į katalogą →</span></div>
+        <div id="dash-downloaded-models-list">
+          <div class="dl-row"><div class="dl-dot"></div><div class="dl-name">Kraunama...</div><div class="dl-date">...</div><button class="dl-use">Pridėti</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SĄRAŠAS ══════════════ -->
+<div id="sarasas" class="page">
+  <div class="sar-wrap">
+    <div class="sar-header-box">
+      <div class="sar-proj-label">Projektas</div>
+      <div class="sar-proj-name">Vilniaus apartamentai · Žvėrynas</div>
+      <div class="sar-proj-sub">Gyvenamasis butas · 124 m² · Minimalistinis stilius</div>
+      <div class="sar-designer-row">
+        <div class="sar-avatar">AK</div>
+        <div>
+          <div class="sar-d-name">Aušra Kazlauskienė</div>
+          <div class="sar-d-title">Interjero dizainerė · AK Interjerai</div>
+        </div>
+        <div class="sar-code-badge">
+          <div class="sar-code-label">Nuolaidos kodas</div>
+          <div class="sar-code-val">AUSRA2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sar-discount">
+      <div class="sar-disc-text">Pirkdami su kodu <strong>AUSRA2026</strong> gausite <strong>8% nuolaidą</strong> visam užsakymui</div>
+      <div class="sar-disc-pct">−8%</div>
+    </div>
+
+    <div class="sar-summary">
+      <div class="sar-sum-box"><div class="sar-sum-n">11</div><div class="sar-sum-l">Produktų</div></div>
+      <div class="sar-sum-box"><div class="sar-sum-n">4</div><div class="sar-sum-l">Kategorijos</div></div>
+      <div class="sar-sum-box"><div class="sar-sum-n" id="s-nuolaida">€ 973</div><div class="sar-sum-l">Jūsų nuolaida</div></div>
+      <div class="sar-sum-box"><div class="sar-sum-n" id="s-viso">€ 11 177</div><div class="sar-sum-l">Viso su nuolaida</div></div>
+    </div>
+
+    <div class="sar-cat-header"><div class="sar-cat-title">Sofos ir sėdimieji</div><div class="sar-cat-line"></div><div class="sar-cat-count">3 produktai</div></div>
+    <div class="sar-item"><div class="sar-check on" onclick="togSar(this)">✓</div><div class="sar-item-info"><div class="sar-item-brand">Carl Hansen · Danija</div><div class="sar-item-name">Pavilion Corner Sofa CH163</div></div><div class="sar-qty-wrap"><span class="sar-qty-label">×</span><input class="sar-qty-input" type="number" value="1" min="1" data-price="4650" oninput="calcSar()"></div><div class="sar-price" id="sp0">€ 4 650</div></div>
+    <div class="sar-item"><div class="sar-check on" onclick="togSar(this)">✓</div><div class="sar-item-info"><div class="sar-item-brand">Muuto · Danija</div><div class="sar-item-name">Loom Lounge Chair</div></div><div class="sar-qty-wrap"><span class="sar-qty-label">×</span><input class="sar-qty-input" type="number" value="2" min="1" data-price="1290" oninput="calcSar()"></div><div class="sar-price" id="sp1">€ 2 580</div></div>
+    <div class="sar-item"><div class="sar-check on" onclick="togSar(this)">✓</div><div class="sar-item-info"><div class="sar-item-brand">HAY · Danija</div><div class="sar-item-name">About A Chair AAC22</div></div><div class="sar-qty-wrap"><span class="sar-qty-label">×</span><input class="sar-qty-input" type="number" value="4" min="1" data-price="380" oninput="calcSar()"></div><div class="sar-price" id="sp2">€ 1 520</div></div>
+
+    <div class="sar-cat-header"><div class="sar-cat-title">Apšvietimas</div><div class="sar-cat-line"></div><div class="sar-cat-count">2 produktai</div></div>
+    <div class="sar-item"><div class="sar-check on" onclick="togSar(this)">✓</div><div class="sar-item-info"><div class="sar-item-brand">Flos · Italija</div><div class="sar-item-name">Arco Floor Lamp</div></div><div class="sar-qty-wrap"><span class="sar-qty-label">×</span><input class="sar-qty-input" type="number" value="1" min="1" data-price="2840" oninput="calcSar()"></div><div class="sar-price" id="sp3">€ 2 840</div></div>
+    <div class="sar-item"><div class="sar-check on" onclick="togSar(this)">✓</div><div class="sar-item-info"><div class="sar-item-brand">Menu · Danija</div><div class="sar-item-name">Audo Pendant Light</div></div><div class="sar-qty-wrap"><span class="sar-qty-label">×</span><input class="sar-qty-input" type="number" value="3" min="1" data-price="680" oninput="calcSar()"></div><div class="sar-price" id="sp4">€ 2 040</div></div>
+
+    <div class="sar-cat-header"><div class="sar-cat-title">Stalai</div><div class="sar-cat-line"></div><div class="sar-cat-count">1 produktas</div></div>
+    <div class="sar-item"><div class="sar-check" onclick="togSar(this)"></div><div class="sar-item-info"><div class="sar-item-brand">Ligne Roset · Prancūzija</div><div class="sar-item-name">Tambour Dining Table</div></div><div class="sar-qty-wrap"><span class="sar-qty-label">×</span><input class="sar-qty-input" type="number" value="1" min="1" data-price="3100" oninput="calcSar()"></div><div class="sar-price off" id="sp5">—</div></div>
+
+    <div class="sar-total-box">
+      <div><div class="sar-total-label">Viso su nuolaida (−8%)</div><div class="sar-total-sub">Jūsų komisiniai ≈ 10%</div></div>
+      <div><div class="sar-total-val" id="sar-total">€ 11 177</div><div class="sar-total-com" id="sar-kom">Komisiniai: € 1 118</div></div>
+    </div>
+
+    <div class="sar-actions">
+      <button class="btn-full btn-dark" style="flex:2" onclick="alert('Demo: nuoroda nukopijuota!\npickindes.com/s/VLN-APT-2026?code=AUSRA2026')">↗ Generuoti nuorodą klientui</button>
+      <button class="btn-full btn-out" style="flex:1">↓ Atsisiųsti PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ KLIENTO SĄRAŠAS ══════════════ -->
+<div id="kliento-sarasas" class="page">
+  <div class="sar-wrap" id="client-list-wrap"></div>
+</div>
+
+<!-- ══════════════ PROJEKTAS ══════════════ -->
+<div id="projektas" class="page">
+  <div class="sar-wrap" id="proj-detail-wrap">
+  </div>
+</div>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login" class="page">
+  <div class="form-page">
+    <div class="form-box">
+      <div class="form-title">Prisijungti</div>
+      <div class="form-sub">Sveiki sugrįžę į PickInDes</div>
+      <div class="form-group"><label class="form-label">El. paštas</label><input id="login-email" class="form-input" type="email" placeholder="vardas@pastas.lt"></div>
+      <div class="form-group"><label class="form-label">Slaptažodis</label><input id="login-password" class="form-input" type="password" placeholder="••••••••"></div>
+      <div id="login-error" style="display:none;color:#e74c3c;font-size:13px;margin-bottom:12px;text-align:center"></div>
+      <button id="login-btn" class="form-btn" onclick="performLogin()">Prisijungti</button>
+      <div class="form-divider">arba</div>
+      <button class="form-btn" style="background:var(--bg2);color:var(--dark);border:0.5px solid var(--border2);margin-bottom:6px" onclick="loginAs('dizaineris')" data-i18n="login_demo_designer">Prisijungti kaip dizaineris (demo)</button>
+      <button class="form-btn" style="background:var(--bg2);color:var(--dark);border:0.5px solid var(--border2);margin-bottom:6px" onclick="loginAs('dizaineris2')" data-i18n="login_demo_designer_2">Prisijungti kaip dizaineris 2 (demo)</button>
+      <button class="form-btn" style="background:var(--bg2);color:var(--dark);border:0.5px solid var(--border2)" onclick="loginAs('tiekejas')" data-i18n="login_demo">Prisijungti kaip tiekėjas (demo)</button>
+      <div class="form-switch" style="margin-top:16px">Neturite paskyros? <span onclick="go('register')">Registruotis</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ REGISTER ══════════════ -->
+<div id="register" class="page">
+  <div class="form-page">
+    <div class="form-box">
+      <div class="form-title">Sukurti paskyrą</div>
+      <div class="form-sub">Pasirinkite paskyros tipą</div>
+      <div class="role-grid">
+        <div class="role-card sel" onclick="selRole(this)" data-role="dizaineris"><div class="role-emoji">✏️</div><div class="role-title">Dizaineris</div><div class="role-desc">Kuriu interjerus, gaunu komisinius</div></div>
+        <div class="role-card" onclick="selRole(this)" data-role="tiekejas"><div class="role-emoji">📦</div><div class="role-title">Tiekėjas</div><div class="role-desc">Parduodu produktus, talpinu 3D</div></div>
+      </div>
+      <div class="form-group"><label class="form-label">Vardas, pavardė</label><input id="register-name" class="form-input" placeholder="Aušra Kazlauskienė"></div>
+      <div class="form-group"><label class="form-label">El. paštas</label><input id="register-email" class="form-input" type="email" placeholder="ausra@interjerai.lt"></div>
+      <div class="form-group"><label class="form-label">Telefonas</label><input id="register-phone" class="form-input" type="tel" placeholder="+370 600 00000"></div>
+      <div class="form-group"><label class="form-label">Slaptažodis</label><input id="register-password" class="form-input" type="password" placeholder="Min. 8 simboliai"></div>
+      <div id="register-error" style="display:none;color:#e74c3c;font-size:13px;margin-bottom:12px;text-align:center"></div>
+      <button id="register-btn" class="form-btn" onclick="performRegister()">Registruotis nemokamai</button>
+      <div class="form-switch" style="margin-top:16px">Jau turite paskyrą? <span onclick="go('login')">Prisijungti</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TIEKĖJO PASKYRA ══════════════ -->
+<div id="tiekejo-paskyra" class="page">
+  <div class="tiek-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">Tiekėjo paskyra</div>
+        <div class="dash-sub">Muuto Baltic · muuto.com</div>
+      </div>
+      <div class="n-user"><div class="n-avatar">MT</div><span style="font-size:13px;color:var(--mid)">Paskyros nustatymai</span></div>
+    </div>
+    <div class="tiek-stats">
+      <div class="stat-box"><div class="stat-n" id="sup-stat-products">—</div><div class="stat-l">Produktai kataloge</div></div>
+      <div class="stat-box"><div class="stat-n stat-green">—</div><div class="stat-l">Pardavimai šį mėn.</div></div>
+      <div class="stat-box"><div class="stat-n" id="sup-stat-models">—</div><div class="stat-l">3D modeliai kataloge</div></div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:16px">
+      <div class="dash-card-title">Produktai <span class="dash-card-link" onclick="go('add-product')">+ Pridėti naują</span></div>
+      <table class="prod-table">
+        <thead><tr><th id="sup-th-sku" style="width:10%">SKU</th><th id="sup-th-name" style="width:30%">Pavadinimas</th><th id="sup-th-downloads" style="width:11%">Atsisiuntimai</th><th id="sup-th-likes" style="width:9%">Patinka</th><th id="sup-th-link-clicks" style="width:11%">Nuorodos</th><th></th></tr></thead>
+        <tbody id="supplier-products-tbody">
+          <tr><td colspan="6" style="text-align:center;color:var(--light);padding:20px;font-size:13px">Kraunama...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-title">Duomenų integracija</div>
+      <div class="int-row"><div class="int-info"><div class="int-name">Produktų XML feed</div><div class="int-sub">Automatinis atnaujinimas kas 6h · Paskutinis: prieš 2h</div></div><span class="badge-green">● Aktyvus</span></div>
+      <div class="int-row"><div class="int-info"><div class="int-name">Sandėlio likučiai</div><div class="int-sub">Realaus laiko sinchronizacija</div></div><span class="badge-orange">⚠ Nustatyti</span></div>
+      <div class="int-row"><div class="int-info"><div class="int-name">3D modelių biblioteka</div><div class="int-sub">24 modeliai · .SKP formatas</div></div><span class="badge-green">● Aktyvus</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADD PRODUCT PAGE ══════════════ -->
+<div id="add-product" class="page">
+  <div style="padding:28px;max-width:680px;margin:0 auto">
+    <button class="back-btn" id="add-back-btn" style="padding:0" onclick="go('tiekejo-paskyra')">← Grįžti į paskyrą</button>
+    <div style="margin-top:24px">
+      <div class="dash-title" id="add-form-title" style="margin-bottom:20px">Pridėti naują produktą</div>
+      
+      <form id="product-form" style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label class="form-label" id="lbl-prod-name">Produkto pavadinimas *</label>
+          <input class="form-input" type="text" id="prod-name" placeholder="Loom Lounge Chair" required>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label" id="lbl-prod-brand">Gamintojas</label>
+            <input class="form-input" type="text" id="prod-brand" placeholder="Muuto">
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lbl-prod-category">Kategorija *</label>
+            <select class="form-input" id="prod-category" required style="cursor:pointer;background:var(--bg2)">
+              <option value="" disabled selected id="prod-category-placeholder">Pasirinkite kategoriją...</option>
+              <option value="Sofos ir foteliai">Sofos ir foteliai</option>
+              <option value="Kėdės">Kėdės</option>
+              <option value="Apšvietimas">Apšvietimas</option>
+              <option value="Stalai ir lentynos">Stalai ir lentynos</option>
+              <option value="Tekstilė">Tekstilė</option>
+              <option value="Lauko baldai">Lauko baldai</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label" id="lbl-prod-price">Kaina (€)</label>
+            <input class="form-input" type="number" id="prod-price" placeholder="1290" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lbl-prod-sku">SKU *</label>
+            <input class="form-input" type="text" id="prod-sku" placeholder="MUU-LLC-OAK-01" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:-6px">
+          <label class="toggle-label" for="prod-price-from" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mid)">
+            <input type="checkbox" id="prod-price-from" style="cursor:pointer;width:16px;height:16px">
+            Rodyti "nuo €"
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="lbl-prod-stock">Sandėlyje (vnt.)</label>
+          <input class="form-input" type="number" id="prod-stock" placeholder="3" min="0">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="lbl-prod-desc">Aprašymas</label>
+          <textarea class="form-input" id="prod-desc" placeholder="Trumpas produkto aprašymas..." style="min-height:80px;resize:vertical"></textarea>
+        </div>
+
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:16px">
+          <div id="add-specs-title" style="font-size:13px;font-weight:500;color:var(--mid);margin-bottom:10px">Specifikacijos (nebūtina)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group" style="margin:0">
+              <label class="form-label" id="lbl-prod-dimensions">Matmenys</label>
+              <input class="form-input" type="text" id="prod-dimensions" placeholder="pvz. 75 × 78 × 72 cm">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" id="lbl-prod-material">Medžiaga</label>
+              <input class="form-input" type="text" id="prod-material" placeholder="pvz. Ąžuolas / Audinys">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label" id="lbl-prod-delivery">Pristatymas</label>
+            <input class="form-input" type="text" id="prod-delivery" placeholder="pvz. 8-12 sav.">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="lbl-prod-link">Nuoroda (Link)</label>
+          <input class="form-input" type="url" id="prod-link" placeholder="https://example.com/produktas">
+        </div>
+
+        <!-- ── PHOTOS SECTION ── -->
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div id="photos-section-title" style="font-size:13px;font-weight:500;color:var(--mid)">Produkto nuotraukos</div>
+            <span style="font-size:11px;color:var(--light)" id="photo-count-label">0 / 10</span>
+          </div>
+          <div id="existing-photos-label" style="display:none;font-size:11px;color:var(--light);margin-bottom:8px"></div>
+          <div id="photos-section-hint" style="font-size:11px;color:var(--light);margin-bottom:12px">Pirma nuotrauka bus pagrindinė. Vilkite ir keiskite eilę.</div>
+
+          <!-- Hidden file input -->
+          <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+
+          <!-- Photo grid -->
+          <div id="photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+            <!-- 3 empty slots rendered by JS -->
+          </div>
+
+          <!-- Add button -->
+          <button type="button" id="photo-add-btn" style="width:100%;padding:9px;border:1.5px dashed var(--border2);border-radius:8px;background:none;font-size:13px;color:var(--mid);cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s" onmouseover="this.style.background='var(--bg3,#ebebeb)'" onmouseout="this.style.background='none'">+ Pridėti nuotraukas</button>
+          <div id="photos-section-limits" style="font-size:11px;color:var(--light);margin-top:6px">JPG, PNG, WEBP · maks. 10 MB vienai nuotraukai · iki 10 nuotraukų</div>
+        </div>
+
+        <!-- ── 3D MODELS ── -->
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:16px">
+          <div id="models-section-title" style="font-size:13px;font-weight:500;color:var(--mid);margin-bottom:12px">3D Modeliai (atsisiuntimui) *</div>
+          <div id="existing-model-label" style="display:none;font-size:11px;color:var(--light);margin-bottom:8px"></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#2d7a4a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">SKP</div>
+              <input class="form-input" type="file" id="model-skp" accept=".skp" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#1a5a3a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">OBJ</div>
+              <input class="form-input" type="file" id="model-obj" accept=".obj" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#154d33;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">MTL</div>
+              <input class="form-input" type="file" id="model-mtl" accept=".mtl" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#0d3a1c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">3DS</div>
+              <input class="form-input" type="file" id="model-3ds" accept=".3ds" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#1f3f66;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0">STEP</div>
+              <input class="form-input" type="file" id="model-step" accept=".step,.stp" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#385b76;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0">DWG</div>
+              <input class="form-input" type="file" id="model-dwg" accept=".dwg" style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#3f5f50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0">TEX</div>
+              <input class="form-input" type="file" id="model-textures" accept=".png,.jpg,.jpeg,.webp,.bmp,.tga" multiple style="flex:1">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;height:40px;border-radius:6px;background:#44506d;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0">PACK</div>
+              <input class="form-input" type="file" id="model-archive" accept=".zip,.rar" style="flex:1">
+            </div>
+          </div>
+          <div id="models-section-hint" style="font-size:12px;color:var(--light);margin-top:8px;line-height:1.4">Galite kelti atskirus failus arba vieną PACK (.zip/.rar) iš gamintojo. STEP (.step/.stp) failai palaikomi 3D peržiūrai, o OBJ + MTL atveju tekstūros paimamos automatiškai iš paketo ar TEX laukelio.</div>
+        </div>
+
+        <button type="submit" id="add-form-submit" class="btn-full btn-dark" style="margin-top:8px">+ Pridėti produktą</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="footer-brand-col">
+      <div class="footer-logo">PickInDes</div>
+      <p class="footer-text" data-i18n="footer_tagline">Platforma dizaineriams ir partneriams su 3D produktų katalogu.</p>
+      <div class="footer-contact-row">
+        <a href="mailto:partner@pickindes.com">partner@pickindes.com</a>
+        <span>•</span>
+        <a href="tel:+37060000000">+370 600 00000</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <div class="footer-title" data-i18n="footer_col_platform">Platforma</div>
+      <a href="#" onclick="goToCatalog()" data-i18n="footer_link_catalog">Katalogas</a>
+      <a href="#" onclick="go('register')" data-i18n="footer_link_signup">Registracija</a>
+      <a href="#" onclick="go('tiekejo-paskyra')" data-i18n="footer_link_supplier">Tiekėjo paskyra</a>
+    </div>
+
+    <div class="footer-col">
+      <div class="footer-title" data-i18n="footer_col_partners">Partneriams</div>
+      <a href="#" data-i18n="footer_link_pricing">Kainodara</a>
+      <a href="#" data-i18n="footer_link_demo">Demo pristatymas</a>
+      <a href="#" data-i18n="footer_link_support">Pagalba</a>
+    </div>
+
+    <div class="footer-col">
+      <div class="footer-title" data-i18n="footer_col_legal">Teisinė informacija</div>
+      <a href="#" data-i18n="footer_link_terms">Naudojimo sąlygos</a>
+      <a href="#" data-i18n="footer_link_privacy">Privatumo politika</a>
+      <a href="#" data-i18n="footer_link_cookies">Slapukų politika</a>
+    </div>
+  </div>
+
+  <div class="site-footer-bottom">
+    <span data-i18n="footer_copyright">© 2026 PickInDes. Visos teisės saugomos.</span>
+    <span data-i18n="footer_made">Sukurta Milan Design Show demonstracijai.</span>
+  </div>
+</footer>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>

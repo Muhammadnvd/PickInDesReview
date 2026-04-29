@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PickInDes — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dark: #1d1d1f;
+    --mid: #6e6e73;
+    --light: #aeaeb2;
+    --bg: #f5f5f7;
+    --bg2: #ebebeb;
+    --border: #e0e0e5;
+    --border2: #c7c7cc;
+    --radius: 12px;
+    --green: #28a745;
+    --red: #e74c3c;
+    --orange: #e67e22;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); font-size: 14px; min-height: 100vh; }
+
+  /* ── Login ── */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center; min-height: 100vh;
+  }
+  .login-box {
+    background: #fff; border-radius: var(--radius); padding: 40px 36px;
+    width: 100%; max-width: 380px;
+    box-shadow: 0 2px 24px rgba(0,0,0,.07);
+  }
+  .login-logo { font-size: 13px; color: var(--mid); margin-bottom: 24px; letter-spacing: .04em; }
+  .login-title { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--mid); margin-bottom: 28px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--mid); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+  .form-input {
+    width: 100%; padding: 10px 12px; border: 0.5px solid var(--border2);
+    border-radius: 8px; font-size: 14px; font-family: inherit; outline: none;
+    background: var(--bg); color: var(--dark); transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--dark); background: #fff; }
+  .form-btn {
+    width: 100%; padding: 11px; border: none; border-radius: 8px;
+    background: var(--dark); color: #fff; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: opacity .15s;
+    margin-top: 6px;
+  }
+  .form-btn:disabled { opacity: .5; cursor: not-allowed; }
+  #login-error {
+    display: none; color: var(--red); font-size: 12px;
+    margin-bottom: 12px; text-align: center;
+  }
+
+  /* ── Admin shell ── */
+  #admin-shell { display: none; min-height: 100vh; }
+
+  .admin-nav {
+    background: #fff; border-bottom: 0.5px solid var(--border);
+    padding: 0 28px; display: flex; align-items: center; gap: 0;
+    height: 52px; position: sticky; top: 0; z-index: 100;
+  }
+  .admin-nav-logo { font-size: 13px; font-weight: 500; color: var(--dark); letter-spacing: .04em; margin-right: 32px; flex-shrink: 0; }
+  .admin-tabs { display: flex; gap: 2px; flex: 1; }
+  .admin-tab {
+    padding: 6px 16px; border-radius: 7px; font-size: 13px;
+    cursor: pointer; color: var(--mid); border: none; background: none;
+    font-family: inherit; transition: background .12s, color .12s;
+  }
+  .admin-tab:hover { background: var(--bg); color: var(--dark); }
+  .admin-tab.active { background: var(--bg2); color: var(--dark); font-weight: 500; }
+  .admin-logout {
+    padding: 6px 14px; border-radius: 7px; font-size: 12px;
+    cursor: pointer; color: var(--mid); border: 0.5px solid var(--border2);
+    background: none; font-family: inherit; transition: all .12s; flex-shrink: 0;
+  }
+  .admin-logout:hover { color: var(--red); border-color: var(--red); }
+
+  .admin-body { padding: 28px; max-width: 1200px; margin: 0 auto; }
+
+  .admin-section { display: none; }
+  .admin-section.active { display: block; }
+
+  /* ── Stats ── */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: #fff; border-radius: var(--radius); padding: 18px 16px;
+    border: 0.5px solid var(--border);
+  }
+  .stat-card-n { font-size: 28px; font-weight: 300; color: var(--dark); line-height: 1.1; }
+  .stat-card-l { font-size: 12px; color: var(--mid); margin-top: 4px; }
+
+  /* ── Table shared ── */
+  .table-toolbar {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .table-search {
+    padding: 8px 12px; border: 0.5px solid var(--border2); border-radius: 8px;
+    font-size: 13px; font-family: inherit; outline: none; background: #fff;
+    color: var(--dark); transition: border-color .15s; min-width: 220px;
+  }
+  .table-search:focus { border-color: var(--dark); }
+  .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mid); cursor: pointer; user-select: none; }
+  .toggle-label input { cursor: pointer; }
+
+  .admin-card {
+    background: #fff; border-radius: var(--radius); border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .admin-table { width: 100%; border-collapse: collapse; }
+  .admin-table th {
+    font-size: 11px; font-weight: 500; color: var(--mid); text-transform: uppercase;
+    letter-spacing: .04em; padding: 11px 14px; text-align: left;
+    border-bottom: 0.5px solid var(--border); white-space: nowrap;
+  }
+  .admin-table td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  .admin-table tr:last-child td { border-bottom: none; }
+  .admin-table tr:hover td { background: var(--bg); }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 500; white-space: nowrap;
+  }
+  .badge-green { background: #d4edda; color: #155724; }
+  .badge-red { background: #f8d7da; color: #721c24; }
+  .badge-blue { background: #d1ecf1; color: #0c5460; }
+  .badge-orange { background: #ffeeba; color: #856404; }
+
+  .btn-sm {
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    font-family: inherit; border: 0.5px solid var(--border2); background: none;
+    color: var(--dark); transition: all .12s; white-space: nowrap;
+  }
+  .btn-sm:hover { background: var(--bg2); }
+  .btn-sm.btn-danger { color: var(--red); border-color: var(--red); }
+  .btn-sm.btn-danger:hover { background: #fde8e8; }
+  .btn-sm:disabled { opacity: .4; cursor: not-allowed; }
+
+  .empty-row td { text-align: center; color: var(--light); padding: 32px 14px; font-size: 13px; }
+
+  .section-title { font-size: 18px; font-weight: 500; margin-bottom: 18px; }
+
+  /* ── User modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.42);
+    display: none; align-items: center; justify-content: center;
+    z-index: 500;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    width: min(560px, calc(100vw - 28px));
+    max-height: calc(100vh - 28px);
+    overflow: auto;
+    background: #fff;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    box-shadow: 0 14px 38px rgba(0,0,0,.2);
+  }
+  .product-modal-card {
+    width: min(760px, calc(100vw - 28px));
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .modal-title { font-size: 16px; font-weight: 500; }
+  .modal-close {
+    border: 0.5px solid var(--border2); background: #fff; color: var(--mid);
+    border-radius: 8px; width: 30px; height: 30px; cursor: pointer;
+    font-size: 16px; line-height: 1;
+  }
+  .modal-body { padding: 16px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-grid .form-group { margin-bottom: 0; }
+  .meta-row {
+    margin-top: 12px; padding: 10px 12px; border-radius: 8px;
+    background: var(--bg); color: var(--mid); font-size: 12px;
+  }
+  .modal-actions {
+    margin-top: 14px;
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+  .btn-primary {
+    padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer;
+    background: var(--dark); color: #fff; font-family: inherit; font-size: 13px;
+  }
+  .btn-ghost {
+    padding: 8px 14px; border-radius: 8px; border: 0.5px solid var(--border2);
+    background: #fff; color: var(--mid); cursor: pointer; font-family: inherit; font-size: 13px;
+  }
+  .soft-block {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .soft-block-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--mid);
+    margin-bottom: 10px;
+  }
+  .soft-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--mid);
+    line-height: 1.4;
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .file-chip {
+    width: 44px;
+    height: 36px;
+    border-radius: 6px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  #user-edit-error { display:none; color: var(--red); font-size: 12px; margin-top: 10px; }
+  #product-edit-error { display:none; color: var(--red); font-size: 12px; margin-top: 10px; }
+
+  /* ── Import ── */
+  .import-zone {
+    background: #fff; border-radius: var(--radius); border: 0.5px solid var(--border);
+    padding: 24px; margin-bottom: 18px;
+  }
+  .import-zone-title { font-size: 14px; font-weight: 500; margin-bottom: 14px; }
+  .import-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .import-summary {
+    display: none; margin-top: 16px; padding: 14px 16px;
+    background: var(--bg2); border-radius: 10px; font-size: 13px; line-height: 1.8;
+  }
+  .import-summary b { color: var(--dark); }
+  .import-preview-wrap { display: none; margin-top: 16px; }
+  .import-preview-wrap .admin-card { max-height: 420px; overflow: auto; }
+  .import-action-bar {
+    display: none; margin-top: 14px; padding: 14px 16px;
+    background: #fff3cd; border: 0.5px solid #ffc107; border-radius: 10px;
+    display: none; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .import-action-bar.visible { display: flex; }
+  .import-result {
+    display: none; margin-top: 14px; padding: 14px 16px;
+    border-radius: 10px; font-size: 13px; line-height: 1.8;
+  }
+  .import-result.ok { background: #d4edda; border: 0.5px solid #28a745; }
+  .import-result.err { background: #f8d7da; border: 0.5px solid var(--red); }
+  #import-csv-error { display:none; color: var(--red); font-size: 12px; margin-top: 10px; }
+  .action-badge {
+    display: inline-block; padding: 2px 7px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+  }
+  .action-create { background: #d4edda; color: #155724; }
+  .action-update { background: #d1ecf1; color: #0c5460; }
+  .action-skip   { background: #f8d7da; color: #721c24; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">PickInDes</div>
+    <div class="login-title">Administratoriaus prisijungimas</div>
+    <div class="login-sub">Prieiga tik įgaliotiems asmenims</div>
+    <div id="login-error"></div>
+    <div class="form-group">
+      <label class="form-label" for="admin-username">Vartotojo vardas</label>
+      <input class="form-input" type="text" id="admin-username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="admin-password">Slaptažodis</label>
+      <input class="form-input" type="password" id="admin-password" autocomplete="current-password">
+    </div>
+    <button class="form-btn" id="login-btn">Prisijungti</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN SHELL ══ -->
+<div id="admin-shell">
+  <nav class="admin-nav">
+    <div class="admin-nav-logo">PickInDes Admin</div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="overview">Apžvalga</button>
+      <button class="admin-tab" data-tab="products">Produktai</button>
+      <button class="admin-tab" data-tab="users">Vartotojai</button>
+      <button class="admin-tab" data-tab="import">CSV Importas</button>
+    </div>
+    <button class="admin-logout" id="logout-btn">Atsijungti</button>
+  </nav>
+
+  <div class="admin-body">
+
+    <!-- Overview -->
+    <section class="admin-section active" id="tab-overview">
+      <div class="section-title">Apžvalga</div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Visi produktai</div></div>
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Aktyvūs produktai</div></div>
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Visi vartotojai</div></div>
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Aktyvūs vartotojai</div></div>
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Atsisiuntimai</div></div>
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Patinka</div></div>
+        <div class="stat-card"><div class="stat-card-n">—</div><div class="stat-card-l">Nuorodos</div></div>
+      </div>
+    </section>
+
+    <!-- Products -->
+    <section class="admin-section" id="tab-products">
+      <div class="section-title">Produktai</div>
+      <div class="table-toolbar">
+        <input class="table-search" type="search" id="products-search" placeholder="Ieškoti pagal pavadinimą, SKU, gamintoją...">
+        <label class="toggle-label">
+          <input type="checkbox" id="show-inactive-products">
+          Rodyti neaktyvius
+        </label>
+      </div>
+      <div class="admin-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Pavadinimas</th>
+              <th>Gamintojas</th>
+              <th>Kategorija</th>
+              <th>Kaina</th>
+              <th>Atsisiuntimai</th>
+              <th>Aktyvus</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="products-tbody">
+            <tr class="empty-row"><td colspan="8">Kraunama...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Import -->
+    <section class="admin-section" id="tab-import">
+      <div class="section-title">Masinis CSV importas</div>
+
+      <div class="import-zone">
+        <div class="import-zone-title">1. Pasirinkite CSV failą</div>
+        <div class="soft-note" style="margin-bottom:12px">
+          Privalomi stulpeliai: <b>sku, name, price</b>. Papildomi: brand, category, description, dimensions, material, delivery, link, stock, is_active.<br>
+          Eilutės su klaidomis bus rodomos peržiūroje ir praleistos importo metu.
+        </div>
+        <div class="import-row">
+          <input class="form-input" id="import-csv-file" type="file" accept=".csv,text/csv" style="max-width:320px">
+          <button class="btn-primary" id="import-preview-btn">Peržiūrėti</button>
+          <a id="import-csv-template" href="#" download="import-template.csv" style="font-size:12px;color:var(--mid)">↓ atsisiųsti šabloną</a>
+        </div>
+        <div id="import-csv-error"></div>
+      </div>
+
+      <div class="import-summary" id="import-summary"></div>
+
+      <div class="import-preview-wrap" id="import-preview-wrap">
+        <div class="import-zone-title" style="margin-bottom:8px">2. Peržiūra</div>
+        <div class="admin-card">
+          <table class="admin-table" id="import-preview-table">
+            <thead>
+              <tr>
+                <th>#</th><th>SKU</th><th>Pavadinimas</th><th>Kategorija</th>
+                <th>Kaina</th><th>Sandėlis</th><th>Veiksmas</th><th>Klaidos / Įsp.</th>
+              </tr>
+            </thead>
+            <tbody id="import-preview-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="import-action-bar" id="import-action-bar">
+        <span id="import-action-label" style="font-size:13px"></span>
+        <button class="btn-primary" id="import-apply-btn">Patvirtinti ir importuoti</button>
+      </div>
+
+      <div class="import-result" id="import-result"></div>
+    </section>
+
+    <!-- Users -->
+    <section class="admin-section" id="tab-users">
+      <div class="section-title">Vartotojai</div>
+      <div class="admin-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Vardas</th>
+              <th>El. paštas</th>
+              <th>Tel.</th>
+              <th>Rolė</th>
+              <th>Sukurta</th>
+              <th>Aktyvus</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr class="empty-row"><td colspan="7">Kraunama...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="product-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal-card product-modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="product-modal-title">Produkto kortelė (partnerio forma)</div>
+      <button class="modal-close" id="product-modal-close" type="button" aria-label="Uždaryti">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="product-edit-form">
+        <input type="hidden" id="product-edit-id">
+        <div class="form-group">
+          <label class="form-label" for="product-edit-name">Produkto pavadinimas *</label>
+          <input class="form-input" id="product-edit-name" type="text" placeholder="Loom Lounge Chair" required>
+        </div>
+
+        <div class="modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="product-edit-brand">Gamintojas</label>
+            <input class="form-input" id="product-edit-brand" type="text" placeholder="Muuto">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="product-edit-category">Kategorija *</label>
+            <select class="form-input" id="product-edit-category" required style="cursor:pointer;background:var(--bg2)">
+              <option value="" disabled>Pasirinkite kategoriją...</option>
+              <option value="Sofos ir foteliai">Sofos ir foteliai</option>
+              <option value="Kėdės">Kėdės</option>
+              <option value="Apšvietimas">Apšvietimas</option>
+              <option value="Stalai ir lentynos">Stalai ir lentynos</option>
+              <option value="Tekstilė">Tekstilė</option>
+              <option value="Lauko baldai">Lauko baldai</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="product-edit-price">Kaina (€)</label>
+            <input class="form-input" id="product-edit-price" type="number" step="0.01" min="0" placeholder="1290">
+            <label class="toggle-label" for="product-edit-price-from" style="margin-top:10px; margin-bottom:6px; gap:8px; font-size:12px;">
+              <input type="checkbox" id="product-edit-price-from" style="width:16px;height:16px;">
+              Rodyti "nuo €"
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="product-edit-sku">SKU *</label>
+            <input class="form-input" id="product-edit-sku" type="text" placeholder="MUU-LLC-OAK-01" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="product-edit-stock">Sandėlyje (vnt.)</label>
+          <input class="form-input" id="product-edit-stock" type="number" min="0" placeholder="3">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="product-edit-description">Aprašymas</label>
+          <textarea class="form-input" id="product-edit-description" placeholder="Trumpas produkto aprašymas..." style="min-height:80px;resize:vertical"></textarea>
+        </div>
+
+        <div class="soft-block">
+          <div class="soft-block-title">Specifikacijos (nebūtina)</div>
+          <div class="modal-grid">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="product-edit-dimensions">Matmenys</label>
+              <input class="form-input" id="product-edit-dimensions" type="text" placeholder="pvz. 75 × 78 × 72 cm">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="product-edit-material">Medžiaga</label>
+              <input class="form-input" id="product-edit-material" type="text" placeholder="pvz. Ąžuolas / Audinys">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:12px;margin-bottom:0">
+            <label class="form-label" for="product-edit-delivery">Pristatymas</label>
+            <input class="form-input" id="product-edit-delivery" type="text" placeholder="pvz. 8-12 sav.">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="product-edit-link">Nuoroda (Link)</label>
+          <input class="form-input" id="product-edit-link" type="url" placeholder="https://example.com/produktas">
+        </div>
+
+        <div class="soft-block">
+          <div class="soft-block-title">Produkto nuotraukos (papildymas / keitimas)</div>
+          <div class="form-group" style="margin-bottom:0">
+            <input class="form-input" id="product-edit-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          </div>
+          <div class="form-group" style="margin-top:10px;margin-bottom:0">
+            <label class="toggle-label" for="product-edit-replace-photos">
+              <input type="checkbox" id="product-edit-replace-photos">
+              Pakeisti esamas nuotraukas naujomis
+            </label>
+          </div>
+          <div class="soft-note">Jei nepažymėsite keitimo, naujos nuotraukos bus pridėtos prie esamų.</div>
+        </div>
+
+        <div class="soft-block" style="margin-top:10px">
+          <div class="soft-block-title">3D failai (korekcija pagal formatą)</div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#2d7a4a">SKP</div>
+            <input class="form-input" id="product-edit-model-skp" type="file" accept=".skp">
+          </div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#1a5a3a">OBJ</div>
+            <input class="form-input" id="product-edit-model-obj" type="file" accept=".obj">
+          </div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#154d33">MTL</div>
+            <input class="form-input" id="product-edit-model-mtl" type="file" accept=".mtl">
+          </div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#0d3a1c">3DS</div>
+            <input class="form-input" id="product-edit-model-3ds" type="file" accept=".3ds">
+          </div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#1f3f66">STEP</div>
+            <input class="form-input" id="product-edit-model-step" type="file" accept=".step,.stp">
+          </div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#385b76">DWG</div>
+            <input class="form-input" id="product-edit-model-dwg" type="file" accept=".dwg">
+          </div>
+          <div class="file-row">
+            <div class="file-chip" style="background:#3f5f50">TEX</div>
+            <input class="form-input" id="product-edit-model-textures" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.tga" multiple>
+          </div>
+          <div class="file-row" style="margin-bottom:0">
+            <div class="file-chip" style="background:#44506d">PACK</div>
+            <input class="form-input" id="product-edit-model-archive" type="file" accept=".zip,.rar">
+          </div>
+          <div class="soft-note">Įkeltas formatas pakeičia tik to formato esamą failą.</div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px">
+          <label class="toggle-label" for="product-edit-active">
+            <input type="checkbox" id="product-edit-active">
+            Aktyvus kataloge
+          </label>
+        </div>
+        <div class="meta-row" id="product-edit-meta">Sukurta: —</div>
+        <div id="product-edit-error"></div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="product-edit-cancel" type="button">Atšaukti</button>
+          <button class="btn-primary" id="product-edit-save" type="submit">Išsaugoti</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="user-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="user-modal-title">Vartotojo kortelė</div>
+      <button class="modal-close" id="user-modal-close" type="button" aria-label="Uždaryti">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="user-edit-form">
+        <input type="hidden" id="user-edit-id">
+        <div class="modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="user-edit-name">Vardas</label>
+            <input class="form-input" id="user-edit-name" type="text" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="user-edit-email">El. paštas</label>
+            <input class="form-input" id="user-edit-email" type="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="user-edit-phone">Telefonas</label>
+            <input class="form-input" id="user-edit-phone" type="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="user-edit-role">Rolė</label>
+            <select class="form-input" id="user-edit-role" required>
+              <option value="dizaineris">Dizaineris</option>
+              <option value="tiekejas">Tiekėjas</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label class="toggle-label" for="user-edit-active">
+            <input type="checkbox" id="user-edit-active">
+            Aktyvi paskyra
+          </label>
+        </div>
+        <div class="meta-row" id="user-edit-meta">Sukurta: —</div>
+        <div id="user-edit-error"></div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="user-edit-cancel" type="button">Atšaukti</button>
+          <button class="btn-primary" id="user-edit-save" type="submit">Išsaugoti</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/admin.js"></script>
+</body>
+</html>
