@@ -1,58 +1,56 @@
-# PickInDes Prototype
+# PicInDes
 
-This workspace contains the current PicInDes web app source.
+PicInDes is a full-stack web app for interior design product discovery and sharing. It combines a product catalog, supplier links, project collections, PDF export, and admin/product management.
 
-## Files
-- `index.html` — main website entry
-- `style.css` — extracted styles
-- `script.js` — extracted functionality and interactions
+## Stack
+- Frontend: HTML, CSS, vanilla JavaScript, Vite
+- Backend: Node.js, Express
+- Database: SQLite3
+- File uploads: Multer
+- 3D / model-related integrations are handled in the frontend app logic
 
-## How to run
-1. Open `index.html` in your browser.
-2. Or run a local server if you prefer, e.g. using VS Code Live Server or a simple Python/Node server.
+## Main project files
+- `index.html` — main app entry
+- `script.js` — main frontend logic
+- `style.css` — main styling
+- `server.js` — Express API and SQLite integration
+- `admin.html` — admin interface shell
+- `public/admin.js` — admin panel client logic
+- `.env.example` — example environment configuration
 
-## Notes
-- The site is a static HTML prototype with internal demo interactions.
-- Images are loaded from Unsplash and the external Google Fonts link is included.
-
-## Build setup
+## Local setup
 1. Install dependencies:
    ```bash
    npm install
    ```
-2. Start development server:
-   ```bash
-   npm run dev
+2. Create an environment file from `.env.example`.
+3. Set at least these values:
+   ```env
+   PORT=3001
+   CORS_ORIGIN=http://localhost:5173
+   ADMIN_USER=admin
+   ADMIN_PASSWORD=your-password
+   DATA_DIR=./data
    ```
-3. Start backend server (in a new terminal):
+4. Start the backend:
    ```bash
    npm run server
    ```
-4. Build for production:
+5. Start the frontend dev server in a second terminal:
    ```bash
-   npm run build
-   ```
-5. Preview the production build:
-   ```bash
-   npm run preview
+   npm run dev
    ```
 
-## Database & Product Management
+## Available scripts
+- `npm run dev` — start Vite dev server
+- `npm run server` — start Express backend
+- `npm run build` — build frontend assets
+- `npm run preview` — preview the production build
+- `npm run seed:demo` — seed demo data
+- `npm run db:clear` — clear product data
+- `npm run db:import` — import products from a script
 
-**Backend**: Node.js + Express  
-**Database**: SQLite3 (stored as `products.db`)  
-**File uploads**: Saved to `uploads/` directory
-
-The backend API runs on `http://localhost:3001` and provides:
-- `GET /api/products` — Retrieve all products
-- `POST /api/products` — Add new product with 2D models (JPG, PNG, SVG)
-
-### Product schema
-- Product info: name, brand, category, price, description, SKU, stock
-- 2D Models: Support for JPG, PNG, SVG formats
-- Uploaded files are stored and served from `/uploads/` directory
-## Run servers
- in powershel
- cd D:\programavimas\PicInDes
- npm run server
- npm run dev
+## Notes for reviewers
+- This repository is a cleaned review copy.
+- Runtime data such as the local database, uploads, backups, and temporary files are intentionally excluded.
+- To run the project fully, a local data directory and sample data may need to be recreated.
